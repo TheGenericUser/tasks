@@ -16,6 +16,7 @@ contract TaskManager{
 
     event TaskCreated(uint indexed taskId, string description, address assignedTo);
     event TaskCompleted(uint indexed taskId);
+    event TaskDeleted(uint indexed taskId);
 
     function getTaskCount() public view returns(uint){
         return showCount;
@@ -62,7 +63,7 @@ contract TaskManager{
         require(task.assignedTo == msg.sender, "You're not assigned to this task.");
 
         delete tasks[_id];
-        
+        emit TaskDeleted(_id);
         showCount--;
     }
 }
