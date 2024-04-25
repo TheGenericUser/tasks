@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: UNLICENSED
+
+pragma solidity ^0.8.25;
+
+
+
+contract TaskManager{
+    struct Tasks{
+        string description;
+        address assignedTo;
+        bool completed;
+    }
+    mapping(uint => Tasks) tasks;
+    uint taskCount;
+    uint showCount;
+
+    event TaskCreated(uint indexed taskId, string description, address assignedTo);
+    event TaskCompleted(uint indexed taskId);
+
+    function getTaskCount() public view returns(uint){
+        return showCount;
+    }
+
+    function createTask(string memory _description) public{
+        taskCount++;
+        showCount++;
+        tasks[taskCount] = Tasks(_description,  msg.sender, false);
+        emit TaskCreated(taskCount, _description,  msg.sender);
+    }
+
+    function seeTasks() public view returns (uint[] memory,string[] memory, bool[] memory) {
+        uint[] memory taskID = new uint[](showCount);
+        string[] memory taskDesc = new string[](showCount);
+        bool[] memory taskCompleted = new bool[](showCount);
+        
+        uint validTaskCount = 0;
+        for (uint i = 1; i <= taskCount; i++) {
+            if (tasks[i].assignedTo == msg.sender) {
+                taskID[validTaskCount] = i;
+                taskDesc[validTaskCount] = tasks[i].description;
+                taskCompleted[validTaskCount] = tasks[i].completed;
+                validTaskCount++;
+            }
+        }
+
+        return (taskID, taskDesc, taskCompleted);
+    }
+
+    function completeTask(uint _id) public{
+        require(_id <= taskCount && _id > 0,"Invalid task ID.");
+        Tasks storage task = tasks[_id];
+        require(task.assignedTo == msg.sender, "You're not assigned to this task.");
+        require(task.completed == false, "Task is already completed.");
+        task.completed = true;
+        emit TaskCompleted(_id);
+    }
+
+    function deleteTask(uint _id) public{
+        require(_id <= taskCount && _id > 0,"Invalid task ID.");
+        Tasks storage task = tasks[_id];
+
+        require(task.assignedTo == msg.sender, "You're not assigned to this task.");
+
+        delete tasks[_id];
+        
+        showCount--;
+    }
+}
